@@ -4,6 +4,11 @@ from ultralytics import YOLO
 import random
 import mysql.connector
 from datetime import datetime
+import os
+
+# Crear carpeta raíz de capturas si no existe
+if not os.path.exists("capturas"):
+    os.makedirs("capturas")
 
 # Configurar el dispositivo
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -19,7 +24,7 @@ clases_esp = {
 color_persona = (0, 255, 0)  # Verde
 
 # Configurar la cámara
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 cap.set(cv2.CAP_PROP_FPS, 60)
@@ -92,7 +97,12 @@ while cap.isOpened():
     # Guardar en MySQL e imagen si hay personas
     ahora = datetime.now()
     if person_count > 0 and (ahora - ultimo_registro).total_seconds() > 1:
-        imagen_path = f"capturas/personas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+        fecha_folder = ahora.strftime("%Y-%m-%d")
+        carpeta_dia = f"capturas/{fecha_folder}"
+        if not os.path.exists(carpeta_dia):
+            os.makedirs(carpeta_dia)
+
+        imagen_path = f"{carpeta_dia}/personas_{ahora.strftime('%Y%m%d_%H%M%S')}.jpg"
         cv2.imwrite(imagen_path, frame)
 
         guardar_en_mysql(person_count, imagen_path)
